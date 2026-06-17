@@ -1,0 +1,81 @@
+BuildSection[
+    name: "Geometry",
+    style.tailwind: "bg-slate-900 py-20 px-6"
+]:
+
+    div[style.tailwind: "max-w-4xl mx-auto text-center"]:
+
+        h2[
+            text: "BlissGeo — Programmable Geometry",
+            style.tailwind: "text-4xl font-bold text-white mb-4",
+            animate: "fadeInUp",
+            animate.trigger: "scroll"
+        ]
+
+        p[
+            text: "Mathematical graphics built into the language. No SVG boilerplate.",
+            style.tailwind: "text-blue-200 mb-12 text-lg"
+        ]
+
+        div[style.tailwind: "flex justify-center"]:
+
+            DrawCanvas[
+                width: 400,
+                height: 400,
+                id: "demo-canvas"
+            ]:
+                # Outer ring
+                circle[
+                    center: "200 200",
+                    radius: 180,
+                    fill: "none",
+                    border.color: "#E94560",
+                    border.width: 2
+                ]
+
+                # Mid ring
+                circle[
+                    center: "200 200",
+                    radius: 120,
+                    fill: "none",
+                    border.color: "#0F3460",
+                    border.width: 2
+                ]
+
+                # Inner filled circle
+                circle[
+                    center: "200 200",
+                    radius: 60,
+                    fill: "#E94560"
+                ]
+
+                # Cross lines
+                line[
+                    from: "200 200",
+                    to: "200 380",
+                    color: "rgba(233,69,96,0.3)",
+                    width: 1
+                ]
+
+                line[
+                    from: "200 200",
+                    to: "380 200",
+                    color: "rgba(233,69,96,0.3)",
+                    width: 1
+                ]
+
+                # Triangle
+                polygon[
+                    points: "200 80, 310 310, 90 310",
+                    fill: "none",
+                    border.color: "#0F3460",
+                    border.width: 2
+                ]
+
+                # Label
+                text[
+                    at: "140 215",
+                    text: "BlissGeo",
+                    fill: "white",
+                    size: 18
+                ]

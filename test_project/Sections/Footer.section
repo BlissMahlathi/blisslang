@@ -1,0 +1,21 @@
+BuildSection[
+    name: "Footer",
+    style.tailwind: "bg-slate-950 py-12 px-6"
+]:
+
+    div[style.tailwind: "max-w-6xl mx-auto flex flex-col items-center gap-4"]:
+
+        p[
+            text: "BlissLang",
+            style.tailwind: "text-2xl font-bold text-red-500"
+        ]
+
+        p[
+            text: "Build websites section by section. Build enterprise systems without fear.",
+            style.tailwind: "text-slate-400 text-center max-w-md"
+        ]
+
+        p[
+            text: "© 2025 Bliss Mahlathi — PulseBit — Nkowankowa, Limpopo",
+            style.tailwind: "text-slate-600 text-sm"
+        ]

@@ -1,0 +1,12 @@
+/home/hlulani/Desktop/blisslang/target/debug/deps/libanstyle-967538d407695b2c.rmeta: /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/lib.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/macros.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/color.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/effect.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/reset.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/style.rs
+
+/home/hlulani/Desktop/blisslang/target/debug/deps/libanstyle-967538d407695b2c.rlib: /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/lib.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/macros.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/color.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/effect.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/reset.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/style.rs
+
+/home/hlulani/Desktop/blisslang/target/debug/deps/anstyle-967538d407695b2c.d: /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/lib.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/macros.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/color.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/effect.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/reset.rs /home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/style.rs
+
+/home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/lib.rs:
+/home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/macros.rs:
+/home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/color.rs:
+/home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/effect.rs:
+/home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/reset.rs:
+/home/hlulani/.cargo/registry/src/index.crates.io-6f17d22bba15001f/anstyle-1.0.14/src/style.rs:

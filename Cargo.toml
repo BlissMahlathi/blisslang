@@ -1,0 +1,34 @@
+[package]
+name        = "blisslang"
+version     = "0.2.0"
+edition     = "2021"
+authors     = ["Bliss Mahlathi <bliss@pulsebit.dev>"]
+description = "BlissLang — A section-driven enterprise web language powered by Rust"
+
+[[bin]]
+name = "bliss"
+path = "src/main.rs"
+
+[dependencies]
+# CLI parsing
+clap      = { version = "=4.3.24", features = ["derive"] }
+# Terminal colours
+colored   = "=2.0.4"
+# Directory walking
+walkdir   = "=2.3.3"
+# Open browser
+open      = "=3.2.0"
+# Error types
+thiserror = "=1.0.48"
+# File watching for hot reload — pure Rust, no C deps
+notify    = "=5.2.0"
+
+# Zero axum. Zero tokio. Zero hyper.
+# HTTP server runs on std::net::TcpListener only.
+
+[profile.release]
+opt-level   = 3
+lto         = true
+codegen-units = 1
+strip       = true
+

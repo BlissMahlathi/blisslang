@@ -1,0 +1,25 @@
+BuildSection[
+    name: "About",
+    style.tailwind: "bg-slate-900 py-4 mt-2",
+]:
+    h1[
+        text: "About Us",
+        style.tailwind: "text-6xl font-bold text-white",
+        animate: "fadeInUp",
+        animate.delay: "0ms",
+        animate.duration: "800ms",
+        animate.trigger: "load"
+    ]
+    p[
+        text: "Build websites section by section. Build enterprise systems without fear.",
+        style.tailwind: "text-xl text-blue-200 mt-4 max-w-2xl text-center",
+        animate: "fadeInUp",
+        animate.delay: "200ms"
+    ]
+    DrawCanvas[
+        width: 400,
+        height: 400,
+        id: "line"
+    ]:
+        
+        

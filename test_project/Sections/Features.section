@@ -1,0 +1,50 @@
+BuildSection[
+    name: "Features",
+    style.tailwind: "bg-white py-20 px-6"
+]:
+
+    div[style.tailwind: "max-w-6xl mx-auto"]:
+
+        h2[
+            text: "Why BlissLang?",
+            style.tailwind: "text-4xl font-bold text-center text-slate-900 mb-4",
+            animate: "fadeInUp",
+            animate.trigger: "scroll"
+        ]
+
+        p[
+            text: "Everything you need. Nothing you don't.",
+            style.tailwind: "text-center text-slate-500 mb-16 text-lg"
+        ]
+
+        div[style.tailwind: "grid grid-cols-1 md:grid-cols-3 gap-8"]:
+
+            div[
+                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-100",
+                animate: "fadeInUp",
+                animate.delay: "0ms",
+                animate.trigger: "scroll"
+            ]:
+                p[text: "🔒", style.tailwind: "text-4xl mb-4"]
+                h3[text: "Zero npm Risk", style.tailwind: "text-xl font-bold text-slate-900 mb-2"]
+                p[text: "No node_modules. No supply chain attacks. No transitive dependencies. The compiler is a single Rust binary.", style.tailwind: "text-slate-500"]
+
+            div[
+                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-100",
+                animate: "fadeInUp",
+                animate.delay: "150ms",
+                animate.trigger: "scroll"
+            ]:
+                p[text: "⚡", style.tailwind: "text-4xl mb-4"]
+                h3[text: "Rust Powered", style.tailwind: "text-xl font-bold text-slate-900 mb-2"]
+                p[text: "Millisecond startup times. Low memory. Cross-platform. One binary does everything.", style.tailwind: "text-slate-500"]
+
+            div[
+                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-100",
+                animate: "fadeInUp",
+                animate.delay: "300ms",
+                animate.trigger: "scroll"
+            ]:
+                p[text: "📐", style.tailwind: "text-4xl mb-4"]
+                h3[text: "Section Driven", style.tailwind: "text-xl font-bold text-slate-900 mb-2"]
+                p[text: "Think in pages and sections, not components and hooks. Organised by nature, not by discipline.", style.tailwind: "text-slate-500"]
