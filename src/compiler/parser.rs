@@ -342,6 +342,7 @@ impl Parser {
             TokenKind::OnEvent => self.parse_on_event()?,
             TokenKind::DrawCanvas => self.parse_geo_canvas()?,
             TokenKind::ErrorBoundary => self.parse_error_boundary()?,
+            TokenKind::BuildForm => self.parse_form()?,
             TokenKind::Comment(c) => {
                 let c = c.clone();
                 self.advance();
@@ -598,6 +599,99 @@ impl Parser {
         }
         self.expect(TokenKind::Dedent)?;
         Ok(Child::ErrorBoundary { fallback, on_error, body })
+    }
+
+    // ── Forms (BuildForm / Field / SubmitButton) ──────────────────────────
+
+    fn parse_form(&mut self) -> ParseResult<Child> {
+        self.expect(TokenKind::BuildForm)?;
+        let attrs = self.parse_attr_list()?;
+        let name   = attrs.get_str("name").unwrap_or("Form").to_string();
+        let action = attrs.get_str("action").map(str::to_string);
+        let method = attrs.get_str("method").unwrap_or("post").to_string();
+
+        self.expect(TokenKind::Colon)?;
+        self.expect_newline()?;
+        self.expect(TokenKind::Indent)?;
+
+        let mut fields = Vec::new();
+        let mut submit = None;
+
+        while !self.check(TokenKind::Dedent) && !self.at_end() {
+            self.skip_newlines();
+            if self.check(TokenKind::Dedent) { break; }
+
+            match &self.current().kind.clone() {
+                TokenKind::Field => {
+                    self.advance();
+                    let fattrs = self.parse_attr_list()?;
+                    fields.push(Self::build_form_field(&fattrs));
+                    self.skip_newlines();
+                }
+                TokenKind::SubmitButton => {
+                    self.advance();
+                    let sattrs = self.parse_attr_list()?;
+                    submit = Some(FormSubmit {
+                        text:         sattrs.get_str("text").unwrap_or("Submit").to_string(),
+                        loading_text: sattrs.get_str("loading_text").map(str::to_string),
+                    });
+                    self.skip_newlines();
+                }
+                TokenKind::Comment(c) => {
+                    let _ = c.clone();
+                    self.advance();
+                }
+                _ => {
+                    // Unknown child — parse and discard as a generic child so a
+                    // typo doesn't take down the whole form.
+                    self.parse_child()?;
+                }
+            }
+        }
+
+        self.expect(TokenKind::Dedent)?;
+        Ok(Child::Form(FormNode { name, action, method, fields, submit }))
+    }
+
+    fn build_form_field(attrs: &AttrList) -> FormField {
+        let name          = attrs.get_str("name").unwrap_or("field").to_string();
+        let field_type    = attrs.get_str("type").unwrap_or("text").to_string();
+        let label         = attrs.get_str("label").map(str::to_string);
+        let placeholder   = attrs.get_str("placeholder").map(str::to_string);
+        let required      = attrs.get_bool("required").unwrap_or(false);
+        let accept        = attrs.get_str("accept").map(str::to_string);
+        let max_size      = attrs.get_str("max_size").map(str::to_string);
+        let default_value = attrs.get_str("default").map(str::to_string);
+
+        let mut validators = Vec::new();
+        if required {
+            validators.push(Validator::Required);
+        }
+        if let Some(v) = attrs.get_str("validator") {
+            for part in v.split('|') {
+                if let Some(rule) = Validator::parse(part) {
+                    if rule != Validator::Required || !required {
+                        validators.push(rule);
+                    }
+                }
+            }
+        }
+
+        let options = attrs.get_str("options").map(|s| {
+            s.split(',')
+                .filter_map(|pair| {
+                    let mut it = pair.splitn(2, ':');
+                    let value = it.next()?.trim().to_string();
+                    let label = it.next().unwrap_or(&value).trim().to_string();
+                    if value.is_empty() { None } else { Some((value, label)) }
+                })
+                .collect()
+        }).unwrap_or_default();
+
+        FormField {
+            name, field_type, label, placeholder, required,
+            validators, options, accept, max_size, default_value,
+        }
     }
 
     // ── BlissGeo Canvas ───────────────────────────────────────────────────

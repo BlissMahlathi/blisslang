@@ -1,8 +1,8 @@
 [package]
 name        = "blisslang"
-version     = "0.8.0"
-edition     = "2024"
-authors     = ["Bliss Mahlathi <blissmahlathi37@gmail.com>"]
+version     = "0.3.0"
+edition     = "2021"
+authors     = ["Bliss Mahlathi <bliss@pulsebit.dev>"]
 description = "BlissLang — A section-driven enterprise web language powered by Rust"
 
 [[bin]]

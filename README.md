@@ -336,6 +336,68 @@ The `icons:` field is a list of tables, which `compiler::config`'s generic key/v
 
 Responsive breakpoints (`OnMobile:` / `OnTablet:` / `OnDesktop:`, spec §19.4) were already implemented in the lexer/parser/renderer before this — `Child::Responsive` renders to a `bliss-mobile-only` / `bliss-tablet-only` / `bliss-desktop-only` class, hidden/shown by the base CSS per breakpoint.
 
+### 14.6 Forms — `BuildForm` / `Field` / `SubmitButton`
+
+Implements spec Part 12. `BuildForm`/`Field`/`SubmitButton` were reserved
+keywords in the lexer since v0.3 but had no parser, renderer, or type-checker
+support at all — this closes that gap end-to-end:
+
+```
+BuildForm[
+    name: "ContactForm",
+    action: "/api/contact",
+    method: "post"
+]:
+    Field[
+        name: "email",
+        type: "email",
+        label: "Email Address",
+        placeholder: "you@example.com",
+        required: true,
+        validator: "email"
+    ]
+
+    Field[
+        name: "phone",
+        type: "tel",
+        label: "Phone Number",
+        validator: "za_phone"
+    ]
+
+    Field[
+        name: "message",
+        type: "textarea",
+        label: "Message",
+        required: true,
+        validator: "min_length:10"
+    ]
+
+    SubmitButton[
+        text: "Send Message",
+        loading_text: "Sending..."
+    ]
+```
+
+Field `type`s: `text`, `email`, `password`, `tel`, `number`, `url`, `date`,
+`textarea`, `select`, `checkbox`, `radio`, `file` (with `accept:` and
+`max_size: "5MB"`). `select`/`radio` take `options: "value:Label,value2:Label2"`.
+
+`validator:` is a `|`-separated list of rules: `required`, `email`, `number`,
+`url`, `min_length:N`, `max_length:N`, `min:N`, `max:N`, `pattern:REGEX`,
+`match:otherFieldName` (confirm-password style), and the two South African
+validators from the spec — `za_id` (13-digit ID number, DOB range + Luhn
+checksum) and `za_phone`.
+
+The renderer emits real, labeled HTML with a `data-validators`/`data-error-for`/
+`data-max-size-bytes` attribute contract; a new client runtime
+(`signals::forms_js`, bundled into `_bliss_runtime.js`) reads that contract to
+do blur- and submit-time validation, disable/relabel the submit button while
+in flight, and POST JSON (or `FormData` when a file field is present) to the
+form's `action` — no hand-written JS needed per form. The type checker
+(`check_form`) validates field types, catches duplicate names, requires
+`options` on `select`/`radio`, and checks that `match:` validators reference a
+real sibling field.
+
 ### 15. Project Scaffolding — `src/runtime/scaffold.rs`
 
 `bliss new MyApp` generates a complete working project — directory structure, a `bliss.config`, a `Landing.page` with `Hero`/`Features`/`Footer` sections, a reusable `Card` div, an `AppState` with example signals, locale files in English and isiZulu, and a `README.md`. Every generated file is verified to pass `bliss check` before being shipped as a template.
@@ -390,7 +452,7 @@ bliss info [project]
 | Dev server + hot reload         | ✅ Done |
 | Runtime mode (dynamic Rust server) | 🚧 Planned |
 | Accessibility (ARIA) emission   | 🚧 Planned |
-| `BuildForm` / validation        | 🚧 Planned |
+| `BuildForm` / validation        | ✅ Done |
 | WebSocket / SSE app runtime      | 🚧 Planned |
 | i18n string resolution          | 🚧 Planned |
 | Package registry (BlissCore/Hub) | 🚧 Planned |

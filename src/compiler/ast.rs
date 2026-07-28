@@ -192,6 +192,8 @@ pub enum Child {
     GeoCanvas { attrs: AttrList, children: Vec<GeoChild> },
     /// ErrorBoundary[fallback: "Card", onError: "log"]: body
     ErrorBoundary { fallback: String, on_error: Option<String>, body: Vec<Child> },
+    /// BuildForm[name: "ContactForm", action: "/api/contact"]: Field[...] SubmitButton[...]
+    Form(FormNode),
     /// A raw statement inside a section body (assignments, calls)
     Stmt(Stmt),
     /// # comment
@@ -200,6 +202,120 @@ pub enum Child {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Breakpoint { Mobile, Tablet, Desktop }
+
+// ─── Forms (spec Part 12: BuildForm / Field / SubmitButton) ────────────────
+
+/// A single field-level validation rule, parsed from a `validator: "..."`
+/// attribute. Multiple rules are pipe-separated: `"required|email"`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Validator {
+    Required,
+    Email,
+    Number,
+    Url,
+    MinLength(u32),
+    MaxLength(u32),
+    Min(f64),
+    Max(f64),
+    /// Regex pattern the value must match.
+    Pattern(String),
+    /// Value must equal the named sibling field (e.g. confirm-password).
+    Match(String),
+    /// South African 13-digit ID number (DOB range + Luhn checksum).
+    ZaId,
+    /// South African mobile/landline number (+27… or 0…).
+    ZaPhone,
+}
+
+impl Validator {
+    /// Parses one `|`-separated validator token, e.g. `"min_length:8"`.
+    pub fn parse(s: &str) -> Option<Self> {
+        let s = s.trim();
+        if s.is_empty() {
+            return None;
+        }
+        if let Some(rest) = s.strip_prefix("min_length:") {
+            return rest.trim().parse().ok().map(Validator::MinLength);
+        }
+        if let Some(rest) = s.strip_prefix("max_length:") {
+            return rest.trim().parse().ok().map(Validator::MaxLength);
+        }
+        if let Some(rest) = s.strip_prefix("min:") {
+            return rest.trim().parse().ok().map(Validator::Min);
+        }
+        if let Some(rest) = s.strip_prefix("max:") {
+            return rest.trim().parse().ok().map(Validator::Max);
+        }
+        if let Some(rest) = s.strip_prefix("pattern:") {
+            return Some(Validator::Pattern(rest.trim().to_string()));
+        }
+        if let Some(rest) = s.strip_prefix("match:") {
+            return Some(Validator::Match(rest.trim().to_string()));
+        }
+        match s {
+            "required"  => Some(Validator::Required),
+            "email"     => Some(Validator::Email),
+            "number"    => Some(Validator::Number),
+            "url"       => Some(Validator::Url),
+            "za_id"     => Some(Validator::ZaId),
+            "za_phone"  => Some(Validator::ZaPhone),
+            _ => None,
+        }
+    }
+
+    /// Client-side `data-validators` token this rule serializes to.
+    pub fn to_token(&self) -> String {
+        match self {
+            Validator::Required       => "required".to_string(),
+            Validator::Email          => "email".to_string(),
+            Validator::Number         => "number".to_string(),
+            Validator::Url            => "url".to_string(),
+            Validator::MinLength(n)   => format!("min_length:{}", n),
+            Validator::MaxLength(n)   => format!("max_length:{}", n),
+            Validator::Min(n)         => format!("min:{}", n),
+            Validator::Max(n)         => format!("max:{}", n),
+            Validator::Pattern(p)     => format!("pattern:{}", p),
+            Validator::Match(f)       => format!("match:{}", f),
+            Validator::ZaId           => "za_id".to_string(),
+            Validator::ZaPhone        => "za_phone".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FormField {
+    pub name:          String,
+    /// text | email | password | tel | number | url | date | textarea |
+    /// select | checkbox | radio | file
+    pub field_type:    String,
+    pub label:         Option<String>,
+    pub placeholder:   Option<String>,
+    pub required:      bool,
+    pub validators:    Vec<Validator>,
+    /// (value, label) pairs for select/radio
+    pub options:       Vec<(String, String)>,
+    /// accepted MIME/extension list for type: "file"
+    pub accept:        Option<String>,
+    /// human-readable max size for type: "file", e.g. "5MB" (display only —
+    /// enforced client-side against parsed bytes)
+    pub max_size:      Option<String>,
+    pub default_value: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FormSubmit {
+    pub text:         String,
+    pub loading_text: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FormNode {
+    pub name:   String,
+    pub action: Option<String>,
+    pub method: String,
+    pub fields: Vec<FormField>,
+    pub submit: Option<FormSubmit>,
+}
 
 // ─── HTML Element Node ────────────────────────────────────────────────────────
 

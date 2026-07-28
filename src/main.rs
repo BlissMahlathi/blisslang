@@ -754,7 +754,7 @@ fn ast_kind_name(ast: &BlissFile) -> &'static str {
 fn print_banner() {
     println!();
     println!("{}", "  ╔════════════════════════════════════════════╗".bright_red());
-    println!("{}", "  ║   B L I S S L A N G    v 0 . 8             ║".bright_red());
+    println!("{}", "  ║   B L I S S L A N G    v 0 . 3            ║".bright_red());
     println!("{}", "  ║   Build websites section by section        ║".bright_red());
     println!("{}", "  ║   Zero npm  •  Zero axum  •  Pure Rust     ║".bright_red());
     println!("{}", "  ╚════════════════════════════════════════════╝".bright_red());

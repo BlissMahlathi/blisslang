@@ -48,7 +48,7 @@ pub struct ServerConfig {
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
-            port:       4578,
+            port:       8080,
             host:       "127.0.0.1".to_string(),
             hot_reload: true,
             project:    ".".to_string(),
@@ -436,6 +436,8 @@ fn runtime_js(hot_reload: bool) -> String {
 
 {signal_js}
 
+{forms_js}
+
 // ── Scroll & load animations ────────────────────────────────────────────────
 (function() {{
     'use strict';
@@ -535,6 +537,10 @@ fn runtime_js(hot_reload: bool) -> String {
         if (window.__bliss && typeof window.__bliss._initDOM === 'function') {{
             window.__bliss._initDOM();
         }}
+        // Init BuildForm validation/submission handlers
+        if (window.__bliss && window.__bliss.forms && typeof window.__bliss.forms.init === 'function') {{
+            window.__bliss.forms.init();
+        }}
         console.log('%c BlissLang v0.3 %c runtime ready ',
             'background:#E94560;color:#fff;padding:2px 6px;border-radius:3px 0 0 3px;font-weight:bold',
             'background:#1A1A2E;color:#fff;padding:2px 6px;border-radius:0 3px 3px 0'
@@ -550,6 +556,7 @@ fn runtime_js(hot_reload: bool) -> String {
 {hot_reload}
 "#,
         signal_js   = signals::signal_js(),
+        forms_js    = signals::forms_js(),
         hot_reload  = hot_reload_client
     )
 }

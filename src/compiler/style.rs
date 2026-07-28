@@ -549,6 +549,21 @@ pub fn generate_css(used_classes: &HashSet<String>) -> String {
     css.push_str("button,select{text-transform:none}\n");
     css.push_str("button,[type='button'],[type='reset'],[type='submit']{-webkit-appearance:button;background-color:transparent;background-image:none}\n\n");
 
+    // Forms (BuildForm/Field) — minimal, framework-agnostic base styles.
+    // Tailwind utility classes on the wrapping section still apply on top of these.
+    css.push_str(".bliss-field{margin-bottom:1rem;display:flex;flex-direction:column;gap:0.375rem}\n");
+    css.push_str(".bliss-field label{font-weight:600;font-size:0.9rem}\n");
+    css.push_str(".bliss-field input,.bliss-field textarea,.bliss-field select{border:1px solid #cbd5e1;border-radius:0.5rem;padding:0.6rem 0.9rem;font-size:1rem;width:100%}\n");
+    css.push_str(".bliss-field input[aria-invalid='true'],.bliss-field textarea[aria-invalid='true'],.bliss-field select[aria-invalid='true']{border-color:#ef4444}\n");
+    css.push_str(".bliss-field-error{color:#ef4444;font-size:0.85rem;min-height:1rem;display:block}\n");
+    css.push_str(".bliss-field-hint{color:#64748b;font-size:0.8rem;margin:0.25rem 0 0}\n");
+    css.push_str(".bliss-radio-option{display:flex;align-items:center;gap:0.5rem;font-weight:400}\n");
+    css.push_str(".bliss-form-submit{cursor:pointer}\n");
+    css.push_str(".bliss-form-submit:disabled{opacity:0.6;cursor:not-allowed}\n");
+    css.push_str(".bliss-form-status{font-size:0.9rem;margin-top:0.5rem}\n");
+    css.push_str(".bliss-form-status.bliss-form-success{color:#16a34a}\n");
+    css.push_str(".bliss-form-status.bliss-form-error{color:#ef4444}\n\n");
+
     // Utility classes
     for class in used_classes {
         // Handle responsive prefixes: md:grid-cols-3, lg:flex, etc.
@@ -560,7 +575,9 @@ pub fn generate_css(used_classes: &HashSet<String>) -> String {
             (None, class.as_str())
         };
 
-        if let Some(rule) = lookup(base) {
+        let resolved = lookup(base).map(str::to_string).or_else(|| arbitrary_rule(base));
+
+        if let Some(rule) = resolved {
             let selector = format!(".{}", escape_class(class));
             match prefix {
                 None => {
@@ -630,6 +647,99 @@ pub fn generate_css(used_classes: &HashSet<String>) -> String {
 
 /// Escape a CSS class name so it's a valid selector.
 /// e.g. "md:grid-cols-3" → "md\\:grid-cols-3"
+/// Resolve a Tailwind **arbitrary-value** class — `bg-[url('/img.png')]`,
+/// `w-[320px]`, `text-[#1a1a2e]`, `[mask-type:luminance]`, etc. — into a raw
+/// CSS declaration body. Returns `None` if `class` isn't in `prefix-[value]`
+/// (or bare `[property:value]`) form, or the prefix isn't recognised.
+///
+/// Follows the Tailwind convention that underscores inside the brackets
+/// stand in for literal spaces (since class names can't contain spaces).
+pub(crate) fn arbitrary_rule(class: &str) -> Option<String> {
+    if !class.ends_with(']') {
+        return None;
+    }
+    let lb = class.find('[')?;
+    let rb = class.rfind(']')?;
+    if rb <= lb {
+        return None;
+    }
+
+    let prefix = class[..lb].strip_suffix('-').unwrap_or(&class[..lb]);
+    let raw_value = &class[lb + 1..rb];
+    if raw_value.is_empty() {
+        return None;
+    }
+    let value = raw_value.replace('_', " ");
+
+    // Bare arbitrary property: `[mask-type:luminance]`, `[grid-column:span_2]`
+    if prefix.is_empty() {
+        let idx = raw_value.find(':')?;
+        let prop = &raw_value[..idx];
+        let val = raw_value[idx + 1..].replace('_', " ");
+        if prop.is_empty() || val.is_empty() {
+            return None;
+        }
+        return Some(format!("{}:{}", prop, val));
+    }
+
+    let looks_like_length = |v: &str| {
+        let v = v.trim();
+        v.ends_with("px") || v.ends_with("rem") || v.ends_with("em") || v.ends_with('%')
+            || v.ends_with("vh") || v.ends_with("vw") || v.ends_with("ch") || v.ends_with("deg")
+            || v.parse::<f64>().is_ok()
+    };
+
+    Some(match prefix {
+        "bg" => {
+            if value.starts_with("url(") {
+                format!("background-image:{}", value)
+            } else {
+                format!("background-color:{}", value)
+            }
+        }
+        "text"   => if looks_like_length(&value) { format!("font-size:{}", value) } else { format!("color:{}", value) },
+        "border" => if looks_like_length(&value) { format!("border-width:{}", value) } else { format!("border-color:{}", value) },
+        "w"        => format!("width:{}", value),
+        "h"        => format!("height:{}", value),
+        "min-w"    => format!("min-width:{}", value),
+        "min-h"    => format!("min-height:{}", value),
+        "max-w"    => format!("max-width:{}", value),
+        "max-h"    => format!("max-height:{}", value),
+        "top"      => format!("top:{}", value),
+        "left"     => format!("left:{}", value),
+        "right"    => format!("right:{}", value),
+        "bottom"   => format!("bottom:{}", value),
+        "inset"    => format!("inset:{}", value),
+        "p"        => format!("padding:{}", value),
+        "px"       => format!("padding-left:{};padding-right:{}", value, value),
+        "py"       => format!("padding-top:{};padding-bottom:{}", value, value),
+        "pt"       => format!("padding-top:{}", value),
+        "pb"       => format!("padding-bottom:{}", value),
+        "pl"       => format!("padding-left:{}", value),
+        "pr"       => format!("padding-right:{}", value),
+        "m"        => format!("margin:{}", value),
+        "mx"       => format!("margin-left:{};margin-right:{}", value, value),
+        "my"       => format!("margin-top:{};margin-bottom:{}", value, value),
+        "mt"       => format!("margin-top:{}", value),
+        "mb"       => format!("margin-bottom:{}", value),
+        "ml"       => format!("margin-left:{}", value),
+        "mr"       => format!("margin-right:{}", value),
+        "gap"      => format!("gap:{}", value),
+        "rounded"  => format!("border-radius:{}", value),
+        "z"        => format!("z-index:{}", value),
+        "opacity"  => format!("opacity:{}", value),
+        "leading"  => format!("line-height:{}", value),
+        "tracking" => format!("letter-spacing:{}", value),
+        "translate-x" => format!("transform:translateX({})", value),
+        "translate-y" => format!("transform:translateY({})", value),
+        "rotate"   => format!("transform:rotate({})", value),
+        "scale"    => format!("transform:scale({})", value),
+        "fill"     => format!("fill:{}", value),
+        "stroke"   => format!("stroke:{}", value),
+        _ => return None,
+    })
+}
+
 fn escape_class(class: &str) -> String {
     class
         .replace(':', "\\:")
@@ -638,6 +748,12 @@ fn escape_class(class: &str) -> String {
         .replace('[', "\\[")
         .replace(']', "\\]")
         .replace('!', "\\!")
+        .replace('(', "\\(")
+        .replace(')', "\\)")
+        .replace('\'', "\\'")
+        .replace('#', "\\#")
+        .replace('%', "\\%")
+        .replace(',', "\\,")
 }
 
 /// Build the complete purged CSS from a list of HTML pages.
@@ -667,6 +783,60 @@ mod tests {
     fn test_lookup_unknown_returns_none() {
         assert!(lookup("not-a-tailwind-class").is_none());
         assert!(lookup("bg-bloo-500").is_none());
+    }
+
+    #[test]
+    fn test_arbitrary_rule_background_image() {
+        let rule = arbitrary_rule("bg-[url('/Assets/Image/bg.png')]").unwrap();
+        assert_eq!(rule, "background-image:url('/Assets/Image/bg.png')");
+    }
+
+    #[test]
+    fn test_arbitrary_rule_background_color() {
+        assert_eq!(arbitrary_rule("bg-[#1a1a2e]").unwrap(), "background-color:#1a1a2e");
+    }
+
+    #[test]
+    fn test_arbitrary_rule_length_vs_color_for_text() {
+        assert_eq!(arbitrary_rule("text-[2rem]").unwrap(), "font-size:2rem");
+        assert_eq!(arbitrary_rule("text-[#ff0000]").unwrap(), "color:#ff0000");
+    }
+
+    #[test]
+    fn test_arbitrary_rule_underscore_becomes_space() {
+        assert_eq!(arbitrary_rule("bg-[center_top]").unwrap(), "background-color:center top");
+    }
+
+    #[test]
+    fn test_arbitrary_rule_bare_property() {
+        assert_eq!(arbitrary_rule("[mask-type:luminance]").unwrap(), "mask-type:luminance");
+    }
+
+    #[test]
+    fn test_arbitrary_rule_unknown_prefix_returns_none() {
+        assert!(arbitrary_rule("frobnicate-[123]").is_none());
+    }
+
+    #[test]
+    fn test_arbitrary_rule_not_bracket_form_returns_none() {
+        assert!(arbitrary_rule("bg-cover").is_none());
+    }
+
+    #[test]
+    fn test_generate_css_resolves_arbitrary_background_image() {
+        let mut used = HashSet::new();
+        used.insert("bg-[url('/Assets/Image/bg.png')]".to_string());
+        let css = generate_css(&used);
+        assert!(css.contains("background-image:url('/Assets/Image/bg.png')"));
+    }
+
+    #[test]
+    fn test_generate_css_arbitrary_with_responsive_prefix() {
+        let mut used = HashSet::new();
+        used.insert("md:w-[320px]".to_string());
+        let css = generate_css(&used);
+        assert!(css.contains("@media(min-width:768px)"));
+        assert!(css.contains("width:320px"));
     }
 
     #[test]

@@ -9,6 +9,7 @@
 
 use crate::compiler::ast::*;
 use crate::compiler::style::lookup as tailwind_lookup;
+use crate::compiler::style::arbitrary_rule as tailwind_arbitrary_rule;
 // HashMap reserved for v0.6 cached lookups
 
 // ─── Type Error ───────────────────────────────────────────────────────────────
@@ -232,6 +233,10 @@ impl TypeChecker {
             }
             Child::Responsive { body, .. } => {
                 for child in body { self.check_child(child, parent_loc); }
+            }
+            Child::Form(form) => {
+                let loc = format!("{}[BuildForm:{}]", parent_loc, form.name);
+                self.check_form(form, &loc);
             }
             _ => {}
         }
@@ -467,8 +472,18 @@ impl TypeChecker {
             // Skip if known
             if tailwind_lookup(base).is_some() { continue; }
 
-            // Skip arbitrary value classes: bg-[#123], text-[2rem], etc.
-            if base.contains('[') && base.contains(']') { continue; }
+            // Arbitrary value classes: bg-[#123], text-[2rem], bg-[url('/img.png')], etc.
+            // Now actually resolved by the style compiler — warn only if the
+            // prefix isn't one it knows how to turn into CSS.
+            if base.contains('[') && base.contains(']') {
+                if tailwind_arbitrary_rule(base).is_none() {
+                    self.errors.push(TypeError::warn(
+                        loc,
+                        format!("Tailwind arbitrary-value class '{}' has an unrecognised prefix — it will be dropped (no CSS generated)", class)
+                    ));
+                }
+                continue;
+            }
 
             // Skip CSS variable references
             if base.starts_with("var(") { continue; }
@@ -490,6 +505,100 @@ impl TypeChecker {
     }
 
     // ── Geo canvas checker ────────────────────────────────────────────────
+
+    // ── Forms ─────────────────────────────────────────────────────────────
+
+    /// Parses a human size like "5MB" for validation purposes only — returns
+    /// 0 if it isn't parseable, mirroring `renderer::parse_size_to_bytes`.
+    fn parse_size_hint(s: &str) -> u64 {
+        let s = s.trim().to_uppercase();
+        let (num_part, mult): (&str, u64) = if let Some(n) = s.strip_suffix("GB") {
+            (n, 1024 * 1024 * 1024)
+        } else if let Some(n) = s.strip_suffix("MB") {
+            (n, 1024 * 1024)
+        } else if let Some(n) = s.strip_suffix("KB") {
+            (n, 1024)
+        } else if let Some(n) = s.strip_suffix('B') {
+            (n, 1)
+        } else {
+            (s.as_str(), 1)
+        };
+        num_part.trim().parse::<f64>().map(|n| (n * mult as f64) as u64).unwrap_or(0)
+    }
+
+    fn check_form(&mut self, form: &FormNode, loc: &str) {
+        const KNOWN_TYPES: &[&str] = &[
+            "text", "email", "password", "tel", "number", "url", "date",
+            "textarea", "select", "checkbox", "radio", "file",
+        ];
+
+        if form.name.trim().is_empty() {
+            self.errors.push(TypeError::error(loc, "BuildForm requires a non-empty 'name'"));
+        }
+        if form.fields.is_empty() {
+            self.errors.push(TypeError::warn(loc, "BuildForm has no Field[...] entries"));
+        }
+
+        let mut seen_names = std::collections::HashSet::new();
+        let field_names: std::collections::HashSet<&str> =
+            form.fields.iter().map(|f| f.name.as_str()).collect();
+
+        for field in &form.fields {
+            let floc = format!("{}[Field:{}]", loc, field.name);
+
+            if field.name.trim().is_empty() {
+                self.errors.push(TypeError::error(&floc, "Field requires a non-empty 'name'"));
+            } else if !seen_names.insert(field.name.clone()) {
+                self.errors.push(TypeError::error(&floc, format!("duplicate field name '{}' in this form", field.name)));
+            }
+
+            if !KNOWN_TYPES.contains(&field.field_type.as_str()) {
+                self.errors.push(TypeError::error(
+                    &floc,
+                    format!("unknown field type '{}' — expected one of: {}", field.field_type, KNOWN_TYPES.join(", "))
+                ));
+            }
+
+            if matches!(field.field_type.as_str(), "select" | "radio") && field.options.is_empty() {
+                self.errors.push(TypeError::error(&floc, format!("type: \"{}\" requires an 'options' list", field.field_type)));
+            }
+
+            for validator in &field.validators {
+                if let Validator::Match(other) = validator {
+                    if !field_names.contains(other.as_str()) {
+                        self.errors.push(TypeError::error(
+                            &floc,
+                            format!("validator: \"match:{}\" refers to a field that doesn't exist in this form", other)
+                        ));
+                    }
+                }
+                if let Validator::Pattern(p) = validator {
+                    if p.trim().is_empty() {
+                        self.errors.push(TypeError::error(&floc, "validator: \"pattern:\" cannot be empty"));
+                    }
+                }
+                if let Validator::MinLength(n) = validator {
+                    if let Some(Validator::MaxLength(m)) = field.validators.iter().find(|v| matches!(v, Validator::MaxLength(_))) {
+                        if n > m {
+                            self.errors.push(TypeError::error(&floc, "min_length is greater than max_length"));
+                        }
+                    }
+                }
+            }
+
+            if field.field_type == "file" {
+                if let Some(size) = &field.max_size {
+                    if Self::parse_size_hint(size) == 0 {
+                        self.errors.push(TypeError::warn(&floc, format!("could not parse max_size '{}' — expected e.g. \"5MB\"", size)));
+                    }
+                }
+            }
+        }
+
+        if form.submit.is_none() {
+            self.errors.push(TypeError::warn(loc, "BuildForm has no SubmitButton[...] — users will have no way to submit it"));
+        }
+    }
 
     fn check_geo_canvas(&mut self, attrs: &AttrList, children: &[GeoChild], loc: &str) {
         let has_width  = attrs.get_num("width").is_some();

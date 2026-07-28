@@ -1,138 +1,50 @@
 BuildSection[
     name: "Features",
-    style.tailwind: "bg-white py-24 px-6"
+    style.tailwind: "bg-white py-20 px-6"
 ]:
 
-    div[
-        style.tailwind: "max-w-7xl mx-auto"
-    ]:
+    div[style.tailwind: "max-w-6xl mx-auto"]:
 
         h2[
-            text: "Why Developers Choose BlissLang"
-            style.tailwind: "text-5xl font-bold text-center text-slate-900 mb-6"
-            animate: "fadeInUp"
+            text: "Why BlissLang?",
+            style.tailwind: "text-4xl font-bold text-center text-slate-900 mb-4",
+            animate: "fadeInUp",
             animate.trigger: "scroll"
         ]
 
         p[
-            text: "A modern language designed to eliminate unnecessary complexity while delivering speed, security, and an exceptional developer experience."
-            style.tailwind: "text-xl text-slate-600 text-center max-w-3xl mx-auto mb-20"
-            animate: "fadeInUp"
-            animate.delay: "150ms"
+            text: "Everything you need. Nothing you don't.",
+            style.tailwind: "text-center text-slate-500 mb-16 text-lg"
         ]
 
-        div[
-            style.tailwind: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        ]:
+        div[style.tailwind: "grid grid-cols-1 md:grid-cols-3 gap-8"]:
 
             div[
-                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-all"
-                animate: "fadeInUp"
+                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-100",
+                animate: "fadeInUp",
+                animate.delay: "0ms",
                 animate.trigger: "scroll"
             ]:
-                p[text:"⚡", style.tailwind:"text-5xl mb-5"]
-
-                h3[
-                    text:"Native Performance"
-                    style.tailwind:"text-2xl font-bold text-slate-900 mb-3"
-                ]
-
-                p[
-                    text:"Compiled with Rust to produce fast, lightweight applications with minimal memory usage and excellent startup performance."
-                    style.tailwind:"text-slate-600 leading-7"
-                ]
-
+                p[text: "🔒", style.tailwind: "text-4xl mb-4"]
+                h3[text: "Zero npm Risk", style.tailwind: "text-xl font-bold text-slate-900 mb-2"]
+                p[text: "No node_modules. No supply chain attacks. No transitive dependencies. The compiler is a single Rust binary.", style.tailwind: "text-slate-500"]
 
             div[
-                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-all"
-                animate: "fadeInUp"
-                animate.delay:"100ms"
-                animate.trigger:"scroll"
+                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-100",
+                animate: "fadeInUp",
+                animate.delay: "150ms",
+                animate.trigger: "scroll"
             ]:
-                p[text:"🔒", style.tailwind:"text-5xl mb-5"]
-
-                h3[
-                    text:"Secure by Design"
-                    style.tailwind:"text-2xl font-bold text-slate-900 mb-3"
-                ]
-
-                p[
-                    text:"No npm ecosystem, no dependency explosion, and no fragile build chains. A single compiler provides a predictable and secure development workflow."
-                    style.tailwind:"text-slate-600 leading-7"
-                ]
-
+                p[text: "⚡", style.tailwind: "text-4xl mb-4"]
+                h3[text: "Rust Powered", style.tailwind: "text-xl font-bold text-slate-900 mb-2"]
+                p[text: "Millisecond startup times. Low memory. Cross-platform. One binary does everything.", style.tailwind: "text-slate-500"]
 
             div[
-                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-all"
-                animate:"fadeInUp"
-                animate.delay:"200ms"
-                animate.trigger:"scroll"
+                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-100",
+                animate: "fadeInUp",
+                animate.delay: "300ms",
+                animate.trigger: "scroll"
             ]:
-                p[text:"🧩", style.tailwind:"text-5xl mb-5"]
-
-                h3[
-                    text:"Section-Based Architecture"
-                    style.tailwind:"text-2xl font-bold text-slate-900 mb-3"
-                ]
-
-                p[
-                    text:"Build applications using logical sections instead of scattered files and boilerplate. Your code mirrors the structure of your application."
-                    style.tailwind:"text-slate-600 leading-7"
-                ]
-
-
-            div[
-                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-all"
-                animate:"fadeInUp"
-                animate.delay:"300ms"
-                animate.trigger:"scroll"
-            ]:
-                p[text:"🎨", style.tailwind:"text-5xl mb-5"]
-
-                h3[
-                    text:"Built-in Styling"
-                    style.tailwind:"text-2xl font-bold text-slate-900 mb-3"
-                ]
-
-                p[
-                    text:"Use Tailwind utilities directly or build your own design system without complicated configuration."
-                    style.tailwind:"text-slate-600 leading-7"
-                ]
-
-
-            div[
-                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-all"
-                animate:"fadeInUp"
-                animate.delay:"400ms"
-                animate.trigger:"scroll"
-            ]:
-                p[text:"🚀", style.tailwind:"text-5xl mb-5"]
-
-                h3[
-                    text:"Developer Productivity"
-                    style.tailwind:"text-2xl font-bold text-slate-900 mb-3"
-                ]
-
-                p[
-                    text:"Spend less time configuring tools and more time building features. BlissLang is designed for rapid iteration and maintainable code."
-                    style.tailwind:"text-slate-600 leading-7"
-                ]
-
-
-            div[
-                style.tailwind: "bg-slate-50 rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-all"
-                animate:"fadeInUp"
-                animate.delay:"500ms"
-                animate.trigger:"scroll"
-            ]:
-                p[text:"🌍", style.tailwind:"text-5xl mb-5"]
-
-                h3[
-                    text:"Cross-Platform"
-                    style.tailwind:"text-2xl font-bold text-slate-900 mb-3"
-                ]
-
-                p[
-                    text:"Develop once and compile on Windows, Linux, and macOS with the same language, tooling, and predictable behavior."
-                    style.tailwind:"text-slate-600 leading-7"
-                ]
+                p[text: "📐", style.tailwind: "text-4xl mb-4"]
+                h3[text: "Section Driven", style.tailwind: "text-xl font-bold text-slate-900 mb-2"]
+                p[text: "Think in pages and sections, not components and hooks. Organised by nature, not by discipline.", style.tailwind: "text-slate-500"]

@@ -86,7 +86,7 @@ pub fn scaffold(opts: ScaffoldOptions) -> Result<(), String> {
     println!("  {} cd {}", "1.".dimmed(), root.cyan());
     println!("  {} bliss dev", "2.".dimmed());
     println!();
-    println!("  {} http://localhost:4578", "->".cyan());
+    println!("  {} http://localhost:8080", "->".cyan());
     println!();
     Ok(())
 }
@@ -119,7 +119,7 @@ fn bliss_config(name: &str) -> String {
 project:       "NAME"
 version:       "0.1.0"
 output:        "static"
-port:          4578
+port:          8080
 hot_reload:    true
 tailwind:      true
 animations:    true

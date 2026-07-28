@@ -564,6 +564,251 @@ pub fn signal_js() -> &'static str {
 "#
 }
 
+/// BlissLang Forms Runtime — Part 12 (BuildForm / Field / SubmitButton)
+///
+/// Pure vanilla JS, no framework dependency. Reads the data-attribute
+/// contract emitted by `renderer::render_form`/`render_form_field`:
+///   - `data-bliss-form="Name"`     on the <form>
+///   - `data-validators="a|b:arg"`  on each input/textarea/select
+///   - `data-error-for="field"`     on the <span> that shows that field's error
+///   - `data-form-status`          on the live-region status message
+///   - `data-bliss-submit` + `data-loading-text` on the submit button
+///
+/// Handles blur-time + submit-time validation, disables/relabels the submit
+/// button while in flight, and POSTs JSON (or FormData when a file field is
+/// present) to the form's `action`, all with zero per-form hand-written JS.
+pub fn forms_js() -> &'static str {
+    r#"
+// ══════════════════════════════════════════════════════════════════════════════
+// BlissLang Forms Runtime
+// Validation + submission for BuildForm/Field/SubmitButton — zero framework
+// ══════════════════════════════════════════════════════════════════════════════
+(function(bliss) {
+    'use strict';
+
+    // ── South African validators (README: "typed validators including
+    //    ZA-specific ones") ─────────────────────────────────────────────────
+
+    function validateZaId(value) {
+        var v = (value || '').replace(/\s+/g, '');
+        if (!/^\d{13}$/.test(v)) return false;
+        var mm = parseInt(v.substr(2, 2), 10);
+        var dd = parseInt(v.substr(4, 2), 10);
+        if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return false;
+
+        var digits = v.split('').map(Number);
+        var sum = 0;
+        for (var i = 0; i < 12; i++) {
+            var d = digits[i];
+            if (i % 2 !== 0) {
+                d = d * 2;
+                if (d > 9) d -= 9;
+            }
+            sum += d;
+        }
+        var check = (10 - (sum % 10)) % 10;
+        return check === digits[12];
+    }
+
+    function validateZaPhone(value) {
+        var v = (value || '').replace(/[\s\-()]/g, '');
+        return /^(\+27|0)[1-9][0-9]{8}$/.test(v);
+    }
+
+    // ── Generic validator dispatch ───────────────────────────────────────────
+
+    function runValidator(rule, value, input) {
+        var parts = rule.split(':');
+        var name  = parts[0];
+        var arg   = parts.slice(1).join(':');
+
+        switch (name) {
+            case 'required':
+                return value.trim() === '' ? 'This field is required.' : null;
+            case 'email':
+                if (value === '') return null;
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? null : 'Enter a valid email address.';
+            case 'number':
+                if (value === '') return null;
+                return isNaN(Number(value)) ? 'Enter a valid number.' : null;
+            case 'url':
+                if (value === '') return null;
+                try { new URL(value); return null; } catch (e) { return 'Enter a valid URL.'; }
+            case 'min_length':
+                return value.length < Number(arg) ? ('Must be at least ' + arg + ' characters.') : null;
+            case 'max_length':
+                return value.length > Number(arg) ? ('Must be at most ' + arg + ' characters.') : null;
+            case 'min':
+                if (value === '') return null;
+                return Number(value) < Number(arg) ? ('Must be at least ' + arg + '.') : null;
+            case 'max':
+                if (value === '') return null;
+                return Number(value) > Number(arg) ? ('Must be at most ' + arg + '.') : null;
+            case 'pattern':
+                if (value === '') return null;
+                try { return new RegExp(arg).test(value) ? null : 'Invalid format.'; } catch (e) { return null; }
+            case 'match': {
+                var other = input.form ? input.form.querySelector('[name="' + arg + '"]') : null;
+                return (other && other.value !== value) ? 'Fields do not match.' : null;
+            }
+            case 'za_id':
+                if (value === '') return null;
+                return validateZaId(value) ? null : 'Enter a valid South African ID number.';
+            case 'za_phone':
+                if (value === '') return null;
+                return validateZaPhone(value) ? null : 'Enter a valid South African phone number.';
+            default:
+                return null;
+        }
+    }
+
+    function fieldValue(input) {
+        if (input.type === 'checkbox') return input.checked ? 'true' : '';
+        if (input.type === 'radio') {
+            var checked = input.form ? input.form.querySelector('input[name="' + input.name + '"]:checked') : null;
+            return checked ? checked.value : '';
+        }
+        return input.value;
+    }
+
+    function validateInput(input) {
+        var validators = (input.dataset.validators || '').split('|').filter(Boolean);
+        var value = fieldValue(input);
+
+        if (input.type === 'file') {
+            var maxBytes = Number(input.dataset.maxSizeBytes || 0);
+            if (input.files && input.files.length && maxBytes > 0) {
+                for (var i = 0; i < input.files.length; i++) {
+                    if (input.files[i].size > maxBytes) return 'File is too large.';
+                }
+            }
+            if (validators.indexOf('required') !== -1 && (!input.files || !input.files.length)) {
+                return 'This field is required.';
+            }
+            return null;
+        }
+
+        for (var v = 0; v < validators.length; v++) {
+            var err = runValidator(validators[v], value, input);
+            if (err) return err;
+        }
+        return null;
+    }
+
+    function showFieldError(form, input, err) {
+        var errorEl = form.querySelector('[data-error-for="' + input.name + '"]');
+        if (errorEl) errorEl.textContent = err || '';
+        input.setAttribute('aria-invalid', err ? 'true' : 'false');
+        input.classList.toggle('bliss-field-invalid', !!err);
+    }
+
+    function validateAndShow(form, input) {
+        var err = validateInput(input);
+        showFieldError(form, input, err);
+        return !err;
+    }
+
+    function formInputs(form) {
+        return Array.prototype.slice.call(form.querySelectorAll('input,textarea,select'))
+            // For radio groups, only validate the first radio per name.
+            .filter(function(el, idx, arr) {
+                if (el.type !== 'radio') return true;
+                return arr.findIndex(function(o) { return o.type === 'radio' && o.name === el.name; }) === idx;
+            });
+    }
+
+    function submitForm(form) {
+        var inputs = formInputs(form);
+        var allValid = true;
+        inputs.forEach(function(input) {
+            if (!validateAndShow(form, input)) allValid = false;
+        });
+
+        var statusEl = form.querySelector('[data-form-status]');
+
+        if (!allValid) {
+            if (statusEl) {
+                statusEl.textContent = 'Please fix the errors above.';
+                statusEl.className = 'bliss-form-status bliss-form-error';
+            }
+            var firstInvalid = form.querySelector('[aria-invalid="true"]');
+            if (firstInvalid) firstInvalid.focus();
+            return;
+        }
+
+        var hasFile   = !!form.querySelector('input[type="file"]');
+        var submitBtn = form.querySelector('[data-bliss-submit]');
+        var original  = submitBtn ? submitBtn.textContent : '';
+        var loading   = submitBtn ? (submitBtn.dataset.loadingText || original) : '';
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = loading; }
+        if (statusEl)  { statusEl.textContent = ''; statusEl.className = 'bliss-form-status'; }
+
+        var body, headers = {};
+        if (hasFile) {
+            body = new FormData(form);
+        } else {
+            var data = {};
+            inputs.forEach(function(input) {
+                data[input.name] = fieldValue(input);
+            });
+            body = JSON.stringify(data);
+            headers['Content-Type'] = 'application/json';
+        }
+
+        var action = form.getAttribute('action') || form.action;
+        var method = (form.getAttribute('method') || 'post').toUpperCase();
+
+        fetch(action, { method: method, headers: headers, body: body })
+            .then(function(res) {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = original; }
+                if (res.ok) {
+                    if (statusEl) {
+                        statusEl.textContent = 'Thank you — your submission was received.';
+                        statusEl.className = 'bliss-form-status bliss-form-success';
+                    }
+                    form.reset();
+                    form.dispatchEvent(new CustomEvent('bliss:submitted', { detail: { form: form } }));
+                } else {
+                    if (statusEl) {
+                        statusEl.textContent = 'Something went wrong. Please try again.';
+                        statusEl.className = 'bliss-form-status bliss-form-error';
+                    }
+                    form.dispatchEvent(new CustomEvent('bliss:submit-failed', { detail: { form: form, status: res.status } }));
+                }
+            })
+            .catch(function() {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = original; }
+                if (statusEl) {
+                    statusEl.textContent = 'Network error. Please check your connection and try again.';
+                    statusEl.className = 'bliss-form-status bliss-form-error';
+                }
+            });
+    }
+
+    function initForms() {
+        var forms = document.querySelectorAll('[data-bliss-form]');
+        forms.forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm(form);
+            });
+            formInputs(form).forEach(function(input) {
+                input.addEventListener('blur', function() { validateAndShow(form, input); });
+            });
+        });
+    }
+
+    bliss.forms = {
+        init: initForms,
+        validateZaId: validateZaId,
+        validateZaPhone: validateZaPhone
+    };
+
+})(window.__bliss = window.__bliss || {});
+"#
+}
+
 /// Generate a state initialisation JS block for a CreateState node.
 /// Called by the renderer when it encounters a StateNode.
 #[allow(dead_code)]

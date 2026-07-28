@@ -281,6 +281,7 @@ impl Renderer {
                 out.push_str("</div>\n");
                 out
             }
+            Child::Form(form) => Self::render_form(form),
             // Real-time and event handlers are emitted as JS — skipped in static render
             Child::OnWS { channel_event, binding, .. } => {
                 format!("<!-- OnWS: {} as {} -->\n", channel_event, binding)
@@ -543,6 +544,181 @@ impl Renderer {
         let child_ctx = ctx.child_ctx();
         for c in body { out.push_str(&Self::render_child(c, &child_ctx)); }
         out.push_str("</div>\n");
+        out
+    }
+
+    /// Convert a human size like "5MB" / "500KB" / "2GB" into bytes for
+    /// client-side file-size validation. Defaults to 0 (no limit) if unparsable.
+    fn parse_size_to_bytes(s: &str) -> u64 {
+        let s = s.trim().to_uppercase();
+        let (num_part, mult): (&str, u64) = if let Some(n) = s.strip_suffix("GB") {
+            (n, 1024 * 1024 * 1024)
+        } else if let Some(n) = s.strip_suffix("MB") {
+            (n, 1024 * 1024)
+        } else if let Some(n) = s.strip_suffix("KB") {
+            (n, 1024)
+        } else if let Some(n) = s.strip_suffix('B') {
+            (n, 1)
+        } else {
+            (s.as_str(), 1)
+        };
+        num_part.trim().parse::<f64>().map(|n| (n * mult as f64) as u64).unwrap_or(0)
+    }
+
+    /// Render a `BuildForm[...]` block into a real, working `<form>` — labeled
+    /// inputs, per-field error slots, a live-region status message, and a
+    /// data-attribute contract (`data-validators`, `data-max-size-bytes`, ...)
+    /// that the client-side forms runtime (`signals::forms_js`) reads to do
+    /// validation, submission (JSON or multipart when a file field is present),
+    /// and loading/disabled states — no hand-written JS required per form.
+    fn render_form(form: &FormNode) -> String {
+        let mut out = String::new();
+        let action = form.action.as_deref().unwrap_or("#");
+        out.push_str(&format!(
+            "<form id=\"{name}\" data-bliss-form=\"{name}\" action=\"{action}\" method=\"{method}\" novalidate>\n",
+            name = Self::escape_html(&form.name),
+            action = Self::escape_html(action),
+            method = Self::escape_html(&form.method),
+        ));
+
+        for field in &form.fields {
+            out.push_str(&Self::render_form_field(&form.name, field));
+        }
+
+        if let Some(submit) = &form.submit {
+            let loading = submit.loading_text.as_deref().unwrap_or(&submit.text);
+            out.push_str(&format!(
+                "  <button type=\"submit\" data-bliss-submit data-loading-text=\"{loading}\" class=\"bliss-form-submit\">{text}</button>\n",
+                loading = Self::escape_html(loading),
+                text = Self::escape_html(&submit.text),
+            ));
+        } else {
+            out.push_str("  <button type=\"submit\" data-bliss-submit class=\"bliss-form-submit\">Submit</button>\n");
+        }
+
+        out.push_str("  <div class=\"bliss-form-status\" data-form-status role=\"status\" aria-live=\"polite\"></div>\n");
+        out.push_str("</form>\n");
+        out
+    }
+
+    fn render_form_field(form_name: &str, field: &FormField) -> String {
+        let field_id = format!("{}-{}", form_name, field.name);
+        let validators: Vec<String> = field.validators.iter().map(Validator::to_token).collect();
+        let validators_attr = validators.join("|");
+        let required_attr = if field.required { " required aria-required=\"true\"" } else { "" };
+        let placeholder_attr = field.placeholder.as_deref()
+            .map(|p| format!(" placeholder=\"{}\"", Self::escape_html(p)))
+            .unwrap_or_default();
+        let default_attr_value = field.default_value.as_deref().unwrap_or("");
+
+        let mut out = String::new();
+        out.push_str(&format!("  <div class=\"bliss-field\" data-field=\"{}\">\n", Self::escape_html(&field.name)));
+
+        if let Some(label) = &field.label {
+            out.push_str(&format!(
+                "    <label for=\"{id}\">{label}</label>\n",
+                id = Self::escape_html(&field_id),
+                label = Self::escape_html(label),
+            ));
+        }
+
+        match field.field_type.as_str() {
+            "textarea" => {
+                out.push_str(&format!(
+                    "    <textarea id=\"{id}\" name=\"{name}\"{placeholder}{required} data-validators=\"{validators}\">{value}</textarea>\n",
+                    id = Self::escape_html(&field_id),
+                    name = Self::escape_html(&field.name),
+                    placeholder = placeholder_attr,
+                    required = required_attr,
+                    validators = Self::escape_html(&validators_attr),
+                    value = Self::escape_html(default_attr_value),
+                ));
+            }
+            "select" => {
+                out.push_str(&format!(
+                    "    <select id=\"{id}\" name=\"{name}\"{required} data-validators=\"{validators}\">\n",
+                    id = Self::escape_html(&field_id),
+                    name = Self::escape_html(&field.name),
+                    required = required_attr,
+                    validators = Self::escape_html(&validators_attr),
+                ));
+                for (value, label) in &field.options {
+                    let selected = if value == default_attr_value { " selected" } else { "" };
+                    out.push_str(&format!(
+                        "      <option value=\"{value}\"{selected}>{label}</option>\n",
+                        value = Self::escape_html(value),
+                        selected = selected,
+                        label = Self::escape_html(label),
+                    ));
+                }
+                out.push_str("    </select>\n");
+            }
+            "checkbox" => {
+                let checked = if default_attr_value == "true" { " checked" } else { "" };
+                out.push_str(&format!(
+                    "    <input type=\"checkbox\" id=\"{id}\" name=\"{name}\"{checked}{required} data-validators=\"{validators}\">\n",
+                    id = Self::escape_html(&field_id),
+                    name = Self::escape_html(&field.name),
+                    checked = checked,
+                    required = required_attr,
+                    validators = Self::escape_html(&validators_attr),
+                ));
+            }
+            "radio" => {
+                for (value, label) in &field.options {
+                    let opt_id = format!("{}-{}", field_id, value);
+                    let checked = if value == default_attr_value { " checked" } else { "" };
+                    out.push_str(&format!(
+                        "    <label class=\"bliss-radio-option\"><input type=\"radio\" id=\"{opt_id}\" name=\"{name}\" value=\"{value}\"{checked}{required} data-validators=\"{validators}\"> {label}</label>\n",
+                        opt_id = Self::escape_html(&opt_id),
+                        name = Self::escape_html(&field.name),
+                        value = Self::escape_html(value),
+                        checked = checked,
+                        required = required_attr,
+                        validators = Self::escape_html(&validators_attr),
+                        label = Self::escape_html(label),
+                    ));
+                }
+            }
+            "file" => {
+                let accept_attr = field.accept.as_deref()
+                    .map(|a| format!(" accept=\"{}\"", Self::escape_html(a)))
+                    .unwrap_or_default();
+                let max_bytes = field.max_size.as_deref().map(Self::parse_size_to_bytes).unwrap_or(0);
+                out.push_str(&format!(
+                    "    <input type=\"file\" id=\"{id}\" name=\"{name}\"{accept}{required} data-validators=\"{validators}\" data-max-size-bytes=\"{max_bytes}\">\n",
+                    id = Self::escape_html(&field_id),
+                    name = Self::escape_html(&field.name),
+                    accept = accept_attr,
+                    required = required_attr,
+                    validators = Self::escape_html(&validators_attr),
+                    max_bytes = max_bytes,
+                ));
+                if let Some(max_size) = &field.max_size {
+                    out.push_str(&format!("    <p class=\"bliss-field-hint\">Max size: {}</p>\n", Self::escape_html(max_size)));
+                }
+            }
+            other => {
+                // text, email, password, tel, number, url, date, etc. — all
+                // map directly to <input type="...">
+                out.push_str(&format!(
+                    "    <input type=\"{ty}\" id=\"{id}\" name=\"{name}\" value=\"{value}\"{placeholder}{required} data-validators=\"{validators}\">\n",
+                    ty = Self::escape_html(other),
+                    id = Self::escape_html(&field_id),
+                    name = Self::escape_html(&field.name),
+                    value = Self::escape_html(default_attr_value),
+                    placeholder = placeholder_attr,
+                    required = required_attr,
+                    validators = Self::escape_html(&validators_attr),
+                ));
+            }
+        }
+
+        out.push_str(&format!(
+            "    <span class=\"bliss-field-error\" data-error-for=\"{name}\" role=\"alert\"></span>\n",
+            name = Self::escape_html(&field.name),
+        ));
+        out.push_str("  </div>\n");
         out
     }
 
