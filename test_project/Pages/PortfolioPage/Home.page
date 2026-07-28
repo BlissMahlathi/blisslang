@@ -1,0 +1,7 @@
+BuildPage[
+    name: "Home", 
+    route: "/home", 
+    title: "Home", 
+    layout: "PortfolioLayout"
+]:
+    IncludeSection["Hero"]

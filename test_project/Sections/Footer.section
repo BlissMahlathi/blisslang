@@ -1,0 +1,54 @@
+BuildSection[
+    name: "Footer",
+    style.tailwind: "bg-slate-950 border-t border-slate-800 py-16 px-6"
+]:
+
+    div[
+        style.tailwind: "max-w-7xl mx-auto flex flex-col items-center text-center gap-6"
+    ]:
+
+        h3[
+            text: "BlissLang"
+            style.tailwind: "text-3xl font-bold text-white"
+        ]
+
+        p[
+            text: "A modern compiled programming language for building fast, secure, and maintainable web applications. Designed to simplify development without compromising performance."
+            style.tailwind: "text-slate-400 max-w-2xl leading-7"
+        ]
+
+        div[
+            style.tailwind: "flex flex-wrap justify-center gap-8 text-slate-300"
+        ]:
+
+            a[
+                text: "Documentation"
+                link: "https://github.com/BlissMahlathi/blisslang/blob/main/README.md"
+                style.tailwind: "hover:text-red-500 transition-colors"
+            ]
+
+            a[
+                text: "GitHub"
+                link: "https://github.com/BlissMahlathi/blisslang"
+                style.tailwind: "hover:text-red-500 transition-colors"
+            ]
+
+            a[
+                text: "Examples"
+                link: "https://github.com/BlissMahlathi/blisslang/tree/main/test_project"
+                style.tailwind: "hover:text-red-500 transition-colors"
+            ]
+
+        div[
+            style.tailwind: "w-full h-px bg-slate-800 mt-6"
+        ]
+
+        p[
+            text: "Created and maintained by Bliss Mahlathi"
+            style.tailwind: "text-slate-500"
+        ]
+
+        p[
+            text: "© 2026 BlissLang. Open-source under the MIT License."
+            style.tailwind: "text-slate-600 text-sm"
+        ]

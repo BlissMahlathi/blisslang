@@ -1,0 +1,27 @@
+[package]
+name        = "blisslang"
+version     = "0.8.0"
+edition     = "2024"
+authors     = ["Bliss Mahlathi <blissmahlathi37@gmail.com>"]
+description = "BlissLang — A section-driven enterprise web language powered by Rust"
+
+[[bin]]
+name = "bliss"
+path = "src/main.rs"
+
+[dependencies]
+clap      = { version = "=4.3.24", features = ["derive"] }
+colored   = "=2.0.4"
+walkdir   = "=2.3.3"
+open      = "=3.2.0"
+thiserror = "=1.0.48"
+notify    = "=5.2.0"
+
+# Zero axum. Zero tokio. Zero hyper.
+# HTTP server: std::net::TcpListener + thread pool only.
+
+[profile.release]
+opt-level     = 3
+lto           = true
+codegen-units = 1
+strip         = true

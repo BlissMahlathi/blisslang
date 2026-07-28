@@ -1,0 +1,14 @@
+BuildPage[
+    name: "Landing",
+    route: "/",
+    title: "BlissLang — Build websites section by section",
+    output: "static"
+]:
+
+    IncludeSection["Hero"]
+
+    IncludeSection["Features"]
+
+    IncludeSection["Geometry"]
+
+    IncludeSection["Footer"]

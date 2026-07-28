@@ -1,0 +1,11 @@
+BuildPage[
+    name: "PortfolioLayout",
+    title: "BlissLang — Build websites section by section",
+    is_layout: true,
+    output: "runtime",
+]:
+    IncludeSection["NavBar"]
+
+    Slot[name: "content"]
+
+    IncludeSection["Footer"]

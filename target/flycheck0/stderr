@@ -1,0 +1,35 @@
+   0.106536400s  INFO prepare_target{force=false package_id=blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang) target="bliss"}: cargo::core::compiler::fingerprint: stale: changed "C:\\Users\\Inhim Trading Pty LT\\Downloads\\blisslang_v0_8_pwa\\blisslang\\src\\runtime\\scaffold.rs"
+   0.106604400s  INFO prepare_target{force=false package_id=blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang) target="bliss"}: cargo::core::compiler::fingerprint:           (vs) "C:\\Users\\Inhim Trading Pty LT\\Downloads\\blisslang_v0_8_pwa\\blisslang\\target\\debug\\.fingerprint\\blisslang-cd2330defb168e4b\\dep-bin-bliss"
+   0.106625300s  INFO prepare_target{force=false package_id=blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang) target="bliss"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 13429668634, nanos: 43898100 } < FileTime { seconds: 13429668646, nanos: 313109600 }
+   0.107096400s  INFO prepare_target{force=false package_id=blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang) target="bliss"}: cargo::core::compiler::fingerprint: fingerprint dirty for blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang)/Check { test: false }/TargetInner { name: "bliss", doc: true, ..: with_path("C:\\Users\\Inhim Trading Pty LT\\Downloads\\blisslang_v0_8_pwa\\blisslang\\src\\main.rs", Edition2024) }
+   0.107164200s  INFO prepare_target{force=false package_id=blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang) target="bliss"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "C:\\Users\\Inhim Trading Pty LT\\Downloads\\blisslang_v0_8_pwa\\blisslang\\target\\debug\\.fingerprint\\blisslang-cd2330defb168e4b\\dep-bin-bliss", reference_mtime: FileTime { seconds: 13429668634, nanos: 43898100 }, stale: "C:\\Users\\Inhim Trading Pty LT\\Downloads\\blisslang_v0_8_pwa\\blisslang\\src\\runtime\\scaffold.rs", stale_mtime: FileTime { seconds: 13429668646, nanos: 313109600 } }))
+   0.130992100s  INFO prepare_target{force=false package_id=blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang) target="bliss"}: cargo::core::compiler::fingerprint: fingerprint error for blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang)/Check { test: true }/TargetInner { name: "bliss", doc: true, ..: with_path("C:\\Users\\Inhim Trading Pty LT\\Downloads\\blisslang_v0_8_pwa\\blisslang\\src\\main.rs", Edition2024) }
+   0.131029600s  INFO prepare_target{force=false package_id=blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang) target="bliss"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang\target\debug\.fingerprint\blisslang-e3520dd85b03163a\test-bin-bliss`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_libgit2_prerelease
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: git_midx_writer_dump
+  17: git_filter_source_repo
+  18: git_midx_writer_dump
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
+    Checking blisslang v0.8.0 (C:\Users\Inhim Trading Pty LT\Downloads\blisslang_v0_8_pwa\blisslang)
+error: could not compile `blisslang` (bin "bliss" test) due to 2 previous errors; 3 warnings emitted

@@ -1,0 +1,135 @@
+BuildSection[
+    name: "Geometry",
+    style.tailwind: "bg-slate-950 py-24 md:w-4xl  px-6"
+]:
+
+    div[
+        style.tailwind: "max-w-6xl mx-auto"
+    ]:
+
+        h2[
+            text: "BlissGeo Code That Draws Mathematics"
+            style.tailwind: "text-5xl font-bold text-white text-center mb-6"
+            animate: "fadeInUp"
+            animate.trigger: "scroll"
+        ]
+
+        p[
+            text: "BlissGeo is the native geometry engine built into BlissLang. Create mathematical figures, engineering diagrams, scientific visualizations, UI graphics, and technical illustrations using expressive code instead of verbose SVG markup."
+            style.tailwind: "text-xl text-slate-300 max-w-4xl mx-auto text-center leading-8 mb-16"
+        ]
+
+        div[
+            style.tailwind: "grid lg:grid-cols-2 gap-16 items-center"
+        ]:
+
+            div:
+
+                DrawCanvas[
+                    width: 400
+                    height: 400
+                    id: "demo-canvas"
+                ]:
+
+                    # Outer Circle
+                    circle[
+                        center:"200 200"
+                        radius:190
+                        fill:"none"
+                        border.color:"#ef4444"
+                        border.width:2
+                    ]
+
+                    # Middle Circle
+                    circle[
+                        center:"200 200"
+                        radius:130
+                        fill:"none"
+                        border.color:"#3b82f6"
+                        border.width:2
+                    ]
+
+                    # Center Circle
+                    circle[
+                        center:"200 200"
+                        radius:60
+                        fill:"#ef4444"
+                    ]
+
+                    # Guide Lines
+                    line[
+                        from:"200 0"
+                        to:"200 400"
+                        color:"rgb(239,68,68,.3)"
+                        width:1
+                    ]
+
+                    line[
+                        from:"0 200"
+                        to:"400 200"
+                        color:"rgba(239,68,68,.3)"
+                        width:1
+                    ]
+
+                    # Triangle
+                    polygon[
+                        points:"200 60,300 320,100 320"
+                        fill:"none"
+                        border.color:"#60a5fa"
+                        border.width:2
+                    ]
+
+                    text[
+                        at:"160 200"
+                        text:"BlissGeo"
+                        fill:"white"
+                        size:20
+                    ]
+
+            div[
+                style.tailwind:"space-y-8"
+            ]:
+
+                div:
+                    h3[
+                        text:"📐 Mathematical Precision"
+                        style.tailwind:"text-2xl font-bold text-white mb-2"
+                    ]
+
+                    p[
+                        text:"Construct circles, polygons, vectors, Bézier curves, coordinate systems, and geometric transformations directly from code."
+                        style.tailwind:"text-slate-400 leading-7"
+                    ]
+
+                div:
+                    h3[
+                        text:"⚙️ Engineering & Scientific Graphics"
+                        style.tailwind:"text-2xl font-bold text-white mb-2"
+                    ]
+
+                    p[
+                        text:"Generate CAD-style diagrams, physics illustrations, GIS overlays, network graphs, circuit layouts, and technical documentation without external graphics software."
+                        style.tailwind:"text-slate-400 leading-7"
+                    ]
+
+                div:
+                    h3[
+                        text:"🎨 Native Vector Rendering"
+                        style.tailwind:"text-2xl font-bold text-white mb-2"
+                    ]
+
+                    p[
+                        text:"Compile directly to scalable vector graphics with built-in rendering support—no manual SVG authoring or third-party libraries required."
+                        style.tailwind:"text-slate-400 leading-7"
+                    ]
+
+                div:
+                    h3[
+                        text:"🚀 Built into BlissLang"
+                        style.tailwind:"text-2xl font-bold text-white mb-2"
+                    ]
+
+                    p[
+                        text:"Geometry is a first-class language feature, enabling programmable graphics for web applications, education, simulations, dashboards, and visualization tools."
+                        style.tailwind:"text-slate-400 leading-7"
+                    ]
