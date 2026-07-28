@@ -33,5 +33,5 @@ BuildSection[
         button[
             text: "View on GitHub",
             style.tailwind: "px-8 py-3 border border-white text-white rounded-lg font-semibold hover:bg-white hover:text-slate-900",
-            link: "https://github.com"
+            link: "https://github.com/BlissMahlathi/Blisslang"
         ]
