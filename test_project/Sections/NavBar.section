@@ -3,10 +3,10 @@ BuildSection[
     style.tailwind: "h-[100vh] w-full bg-slate-900 text-red-500"
 ]:
     h1[
-        text: "Hlulani",
+        text: "Test nav",
         style.tailwind: "bg-slate-400 text-6xl text-slate-900"
     ]
     p[
-        text: "mahlathi",
+        text: "Text",
         
     ]
